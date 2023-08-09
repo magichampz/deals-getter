@@ -13,7 +13,7 @@ def get_webscrape_data():
 
     driver.get("https://shop.chope.co/collections/best-sellers")
 
-    SCROLL_PAUSE_TIME = 3
+    SCROLL_PAUSE_TIME = 0.5
 
     # Get the height of the page
     last_height = driver.execute_script("return document.body.scrollHeight")
@@ -46,7 +46,6 @@ def get_webscrape_data():
         return output
 
     for deal in all_deals:
-        
         title = deal.select('a.color-blue.app-link') # restaurant / name of deal
         links = deal.select('a')
         link = links[0].get('href') # get url to go to the deal page
@@ -68,11 +67,16 @@ def get_webscrape_data():
             if header[0].text == "Address":
                 address = str(card.select('p')[0])
                 address = strip_things(address)  # address of restaurant
-        
+        # get image        
+        image_tag = deal.select_one('.product-each-tile-image img')
+        image_url = None
+        if image_tag:
+            image_url = image_tag['src']
         promos.append({
             "title": title[0].text,
             "info": info,
             "address": address,
+            "image": image_url,
 
         })
     return promos
