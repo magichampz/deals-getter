@@ -5,6 +5,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 import time
 from utils.chopeDetails import parseTags
+from utils.addressConverter import getLongLatFromRawAddress
 
 def get_webscrape_data():
     ## selenium used to scroll to the bottom of the page
@@ -123,7 +124,8 @@ def get_webscrape_data():
             "opening_hours": opening_hours,
             "tags": tagsList,
             "vouchers": cur_deal_vouchers,
-            "link": deal_link
+            "link": deal_link,
+            "longlat": getLongLatFromRawAddress(address)
         })
     return promos
 
