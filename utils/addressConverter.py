@@ -24,7 +24,7 @@ def getLongLatFromPostal(postal):
 
         if data['found'] == 0:
              print("Invalid postal given")
-             return (-1, -1)
+             return (None, None)
         
         # Access the latitude and longitude from the dictionary
         latitude = data['results'][0]['LATITUDE']
