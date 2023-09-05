@@ -47,6 +47,7 @@ def get_webscrape_data():
         output = output.replace("<br/>",", ")
         return output
 
+    id = 0
     for deal in all_deals:
         title = deal.select('a.color-blue.app-link') # restaurant / name of deal
         links = deal.select('a')
@@ -125,7 +126,9 @@ def get_webscrape_data():
             "tags": tagsList,
             "vouchers": cur_deal_vouchers,
             "link": deal_link,
-            "longlat": getLongLatFromRawAddress(address)
+            "longlat": getLongLatFromRawAddress(address),
+            "id": id
         })
+        id += 1
     return promos
 
