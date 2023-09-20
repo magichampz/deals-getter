@@ -1,5 +1,7 @@
 import requests
 import re
+import pandas as pd
+import numpy as np
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -59,7 +61,57 @@ def get_webscrape_data():
         image_url = getPromoImageUrl(deal)
 
         appendPromoGivenData(promos, title, info, addressesAndOpeningHours, image_url, tagsList, cur_deal_vouchers, deal_link)
-    return promos
+    
+        promos_adjusted = apply_offsets(promos)
+    
+    # return promos
+    return promos_adjusted
+
+def offset_range(count):
+    # print(count)
+    min_offset = -0.0006  # Minimum offset (negative)
+    max_offset = 0.0006   # Maximum offset (positive)
+    return np.random.uniform(min_offset, max_offset) * (count/5)
+
+def convert_coordinates(coord_str, type):
+    try:
+        longitude, latitude = map(type, coord_str)
+        return (longitude, latitude)
+    except (ValueError, TypeError):
+        return None
+
+def apply_offsets(promos_og):
+    df = pd.DataFrame(promos_og)
+    
+    # unpack tuple out of list in longlat column
+    df['longlat'] = df['longlat'].apply(lambda x : x[0] if len(x)>0 else ('0.','0.')) 
+    
+    # convert longlat from tuple of strings to tuple of floats (specify type)
+    df['longlat'] = df['longlat'].apply(convert_coordinates, type = float)
+    
+    # adding a column for the number of repetitions for a particular coordinate
+    df['coord_count'] = df.groupby(['longlat'])['longlat'].transform('count')
+    
+    # use coord count to apply an offset in an appropriate range
+    
+    df['longlat'] = df.apply(lambda row: (
+        row['longlat'][0] + offset_range(row['coord_count']),
+        row['longlat'][1] + offset_range(row['coord_count'])
+    ) if row['coord_count'] > 1 else row['longlat'], axis=1)
+    
+    # drop the extra column
+    df.drop('coord_count', axis=1, inplace=True)
+    
+    # convert back from tuple of floats to tuple ofstrings
+    df['longlat'] = df['longlat'].apply(convert_coordinates, type = str) 
+    
+    #  put tuple inside a list like the original dataframe
+    df['longlat'] = df['longlat'].apply(lambda x : [x]) 
+    
+    # convert the df back into a list of dicts like the original promos format
+    promos_mod = df.to_dict(orient = 'records')
+    
+    return promos_mod
 
 def getPromoTitle(deal):
     return deal.select('a.color-blue.app-link')[0].text # restaurant / name of deal
